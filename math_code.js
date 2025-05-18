@@ -175,15 +175,41 @@ function otherBottomNodes(n,m){
 }
 
 function leftBoundary(n,m){
+    fNew[n,m,0] = fOld[n,m,0];
+    fNew[n,m,2] = fOld[n+1,m,2];
+    fNew[n,m,3] = fOld[n,m+1,3];
+    fNew[n,m,4] = fOld[n-1,m,4];
+    fNew[n,m,6] = fOld[n+1,m+1,6];
+    fNew[n,m,7] = fOld[n-1,m+1,7];
 
+    fNew[n,m,1] = fNew[n,m,3];
+    fNew[n,m,5] = fNew[n,m,7] + (fNew[n,m,4] - fNew[n,m,2])/2;
+    fNew[n,m,8] = fNew[n,m,6] + (fNew[n,m,2] - fNew[n,m,4])/2;
 }
 
 function rightBoundary(n,m){
+    fNew[n,m,0] = fOld[n,m,0]; 
+    fNew[n,m,1] = fOld[n,m-1,1];
+    fNew[n,m,2] = fOld[n+1,m,2];
+    fNew[n,m,4] = fOld[n-1,m,4];
+    fNew[n,m,5] = fOld[n+1,m-1,5];
+    fNew[n,m,8] = fOld[n-1,m-1,8];
 
+    fNew[n,m,3] = fNew[n,m,1];
+    fNew[n,m,6] = fNew[n,m,8] + (fNew[n,m,4] - fNew[n,m,2])/2;
+    fNew[n,m,7] = fNew[n,m,5] + (fNew[n,m,2] - fNew[n,m,4])/2;
 }
 
 function interiorNodes(n,m){
-
+    fNew[n,m,0] = fOld[n,m,0];
+    fNew[n,m,1] = fOld[n,m-1,1];
+    fNew[n,m,2] = fOld[n+1,m,2];
+    fNew[n,m,3] = fOld[n,m+1,3];
+    fNew[n,m,4] = fOld[n-1,m,4];
+    fNew[n,m,5] = fOld[n+1,m-1,5];
+    fNew[n,m,6] = fOld[n+1,m+1,6];
+    fNew[n,m,7] = fOld[n-1,m+1,7];
+    fNew[n,m,8] = fOld[n-1,m-1,8];
 }
 
 function momentCalculation(n,m){
