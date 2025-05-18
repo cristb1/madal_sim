@@ -1,0 +1,16 @@
+{
+  "name": "madal_sim",
+  "version": "1.0.0",
+  "description": "LBM Simulation",
+  "main": "math_code.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cristb1/madal_sim"
+  },
+  "author": "Bethany Crist",
+  "license": "ISC",
+  "dependencies": {
+    "mathjs": "^14.4.0"
+  },
+  "type": "module"
+}

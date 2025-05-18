@@ -1,10 +1,11 @@
+import { sum } from 'mathjs';
+
 // Declaring global variables
 let Nx = 50;
 let Ny = 50;
 let Re = 100;
 let Mew = 0.1;
 let tStop = 10;
-let testVal = 1;
     
 let u = Array.from({length: Nx}, () => 
     Array(Ny).fill(1)
@@ -61,7 +62,7 @@ function calculate(){
                 if (n == 0){ // top boundary
                     if (m == 0){
                         topLeftCornerNode(n,m);
-                }else if (m == (Nx - 1)){
+                    }else if (m == (Nx - 1)){
                     topRightCornerNode(n,m);
                 }else{
                     otherTopNodes(n,m);
@@ -80,6 +81,17 @@ function calculate(){
                 rightBoundary(n,m);
             }else{
                 interiorNodes(n,m);
+            }
+            
+        }
+        for (let m = 0; m < Nx; m++){
+            for (let n = 0; n < Ny; n++){
+                momentCalculation(n,m);
+            }
+        }
+        for (let m = 0; m < Nx; m++){
+            for (let n = 0; n < Ny; n++){
+                fEqCalculation(n,m);
             }
         }
     }
@@ -213,11 +225,21 @@ function interiorNodes(n,m){
 }
 
 function momentCalculation(n,m){
-
+    //console.log("m: " + m + ", n: " + n);
+    //console.log(fNew[n][m]);
+    rho[n][m] = sum(fNew[n][m].slice(0, 9));
+    u[n,m] = (fNew[n,m,1] + fNew[n,m,5] + fNew[n,m,8] - fNew[n,m,3] - fNew[n,m,6] - fNew[n,m,7])/rho[n,m];
+    v[n,m] = (fNew[n,m,2] + fNew[n,m,5] + fNew[n,m,6] - fNew[n,m,4] - fNew[n,m,7] - fNew[n,m,8])/rho[n,m];
 }
 
 function fEqCalculation(n,m){
 
 }
 
-calculate();
+//calculate();
+
+for (let m = 0; m < Nx; m++){
+    for (let n = 0; n < Ny; n++){
+        console.log(fNew[n,m]);
+    }
+}
