@@ -91,7 +91,9 @@ function calculate(){
         }
         for (let m = 0; m < Nx; m++){
             for (let n = 0; n < Ny; n++){
-                fEqCalculation(n,m);
+                for(let k = 0; k < 9; k++){
+                    fEqCalculation(n,m,k);
+                }
             }
         }
     }
@@ -232,8 +234,8 @@ function momentCalculation(n,m){
     v[n][m] = (fNew[n][m][2] + fNew[n][m][5] + fNew[n][m][6] - fNew[n][m][4] - fNew[n][m][7] - fNew[n][m][8])/rho[n][m];
 }
 
-function fEqCalculation(n,m){
-
+function fEqCalculation(n,m,k){
+    fEq[n][m][k] = w[k] * rho[n][m] * (1 + Ksi.map(row => row[k]).reduce((a, b) => a + b, 0) * [u[n][m], v[n][m]].reduce((a, b) => a + b, 0) / Math.pow(cs, 2) + Math.pow(Ksi.map(row => row[k]).reduce((a, b) => a + b, 0) * [u[n][m], v[n][m]].reduce((a, b) => a + b, 0), 2) / (2 * Math.pow(cs, 4)) - (Math.pow(u[n][m], 2) + Math.pow(v[n][m], 2)) / (2 * Math.pow(cs, 2)));
 }
 
 calculate();
