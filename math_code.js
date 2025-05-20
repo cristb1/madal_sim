@@ -5,7 +5,7 @@ let Nx = 50;
 let Ny = 50;
 let Re = 100;
 let Mew = 0.1;
-let tStop = 10;
+let tStop = 2;
     
 let u = Array.from({length: Nx}, () => 
     Array(Ny).fill(1)
@@ -18,11 +18,18 @@ let rho = Array.from({length: Nx}, () =>
 );
 
 const Ksi = [
-    [0, 1, 0, -1, 0, 1, -1, -1, 1],
-    [0, 0, 1, 0, -1, 1, 1, -1, -1]
+  [0, 0],
+  [1, 0],
+  [0, 1],
+  [-1, 0],
+  [0, -1],
+  [1, 1],
+  [-1, 1],
+  [-1, -1],
+  [1, -1]
 ];
 
-const w = [4/9, 1/9, 1/9, 1/9, 1/9, 1/36, 1/36, 1/36/ 1/36];
+const w = [4/9, 1/9, 1/9, 1/9, 1/9, 1/36, 1/36, 1/36, 1/36];
 
 const cs = 1/(Math.sqrt(3));
 
@@ -56,6 +63,7 @@ let rhoB;
 function calculate(){
     // Calculation
     for (let t = 0; t < tStop; t++){
+        console.log(t);
         // Streaming for all interior nodes and for boundary nodes
         for (let m = 0; m < Nx; m++){ // x coordinates
             for (let n = 0; n < Ny; n++){ // y coordinates
@@ -89,6 +97,7 @@ function calculate(){
                 momentCalculation(n,m);
             }
         }
+        //console.log("t: " + t);
         for (let m = 0; m < Nx; m++){
             for (let n = 0; n < Ny; n++){
                 for(let k = 0; k < 9; k++){
@@ -96,9 +105,15 @@ function calculate(){
                 }
             }
         }
+
+        collision();
+        //console.log("t: " + t);
+        //console.log(u[0][0]);
     }
 }
-return fEq;
+//console.log("in calculate function: ");
+//console.log(u);
+//flipUV(u,v);
 }
 
 function topLeftCornerNode(n,m){
@@ -236,7 +251,34 @@ function momentCalculation(n,m){
 }
 
 function fEqCalculation(n,m,k){
-    fEq[n][m][k] = w[k] * rho[n][m] * (1 + Ksi.map(row => row[k]).reduce((a, b) => a + b, 0) * [u[n][m], v[n][m]].reduce((a, b) => a + b, 0) / Math.pow(cs, 2) + Math.pow(Ksi.map(row => row[k]).reduce((a, b) => a + b, 0) * [u[n][m], v[n][m]].reduce((a, b) => a + b, 0), 2) / (2 * Math.pow(cs, 4)) - (Math.pow(u[n][m], 2) + Math.pow(v[n][m], 2)) / (2 * Math.pow(cs, 2)));
+    /*if(n == 0 || n == 3){
+        console.log("Before: " + fEq[1][1]);
+    }*/
+    fEq[n][m][k] = w[k] * rho[n][m] * (1 + dotProduct(Ksi[k], [u[n][m], v[n][m]]) / (cs ** 2) + Math.pow(dotProduct(Ksi[k], [u[n][m], v[n][m]]), 2) / (2 * (cs ** 4)) - (Math.pow(u[n][m], 2) + Math.pow(v[n][m], 2)) / (2 * (cs ** 2)));
+    /*if(n == 0 || n == 3){
+        console.log("After: " + fEq[1][1]);
+    }*/
 }
 
-//calculate();
+function collision(){
+    fOld = fNew.map((row, i) => row.map((col, j) => col.map((value, k) => value - (value - fEq[i][j][k]) / Tau)));
+}
+
+function flipUV(u,v){
+    console.log("In flip function: ")
+    console.log(u);
+    let flippedU = [...u].reverse();
+    let flippedV = [...v].reverse();
+}
+
+function dotProduct(a, b) {
+    return a.reduce((sum, value, index) => sum + value * b[index], 0);
+}
+
+
+calculate();
+//for (let k = 0; k < 9; k++){
+//    console.log("K: " + k);
+//    console.log("Ksi[0" + "][" + k + "]:" + Ksi[0][k]);
+//    console.log("Ksi[1" + "][" + k + "]:" + Ksi[1][k]);
+//}
