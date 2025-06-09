@@ -1,11 +1,15 @@
-import { sum } from 'mathjs';
+//import { sum } from 'mathjs';
 
 // Declaring global variables
+let scale = 10; // Size of each cell on screen
+let drawStep = 1; // How often to draw frames
+let stepCount = 0;
+
 let Nx = 50;
 let Ny = 50;
 let Re = 100;
 let Mew = 0.1;
-let tStop = 2;
+let tStop = 20;
     
 let u = Array.from({length: Nx}, () => 
     Array(Ny).fill(1)
@@ -41,19 +45,19 @@ const uLid = Re*Mew/L;
 
 const Tau = 3*Mew+0.5;
 
-let fNew = Array.from({length: Ny}, () => 
-    Array.from({ length: Nx }, () => 
+let fNew = Array.from({length: Nx}, () => 
+    Array.from({ length: Ny }, () => 
         Array(9).fill(1)
     )
 );
-let fOld = Array.from({length: Ny}, () => 
-    Array.from({ length: Nx }, () => 
+let fOld = Array.from({length: Nx}, () => 
+    Array.from({ length: Ny }, () => 
         Array(9).fill(1)
     )
 );
 
-let fEq = Array.from({length: Ny}, () => 
-    Array.from({ length: Nx }, () => 
+let fEq = Array.from({length: Nx}, () => 
+    Array.from({ length: Ny }, () => 
         Array(9).fill(1)
     )
 );
@@ -63,7 +67,6 @@ let rhoB;
 function calculate(){
     // Calculation
     for (let t = 0; t < tStop; t++){
-        console.log(t);
         // Streaming for all interior nodes and for boundary nodes
         for (let m = 0; m < Nx; m++){ // x coordinates
             for (let n = 0; n < Ny; n++){ // y coordinates
@@ -107,17 +110,11 @@ function calculate(){
         }
 
         collision();
-        //console.log("t: " + t);
-        //console.log(u[0][0]);
     }
 }
-//console.log("in calculate function: ");
-//console.log(u);
-//flipUV(u,v);
 }
 
 function topLeftCornerNode(n,m){
-    //console.log("left");
     fNew[n][m][0] = fOld[n][m][0];
     fNew[n][m][2] = fOld[n+1][m][2];
     fNew[n][m][3] = fOld[n][m+1][3];
@@ -133,7 +130,6 @@ function topLeftCornerNode(n,m){
 }
 
 function topRightCornerNode(n,m){
-    //console.log("right")
     fNew[n][m][0] = fOld[n][m][0];
     fNew[n][m][1] = fOld[n][m-1][1];
     fNew[n][m][2] = fOld[n+1][m][2];
@@ -149,7 +145,6 @@ function topRightCornerNode(n,m){
 }
 
 function otherTopNodes(n,m){
-    //console.log("other");
     fNew[n][m][0] = fOld[n][m][0];
     fNew[n][m][1] = fOld[n][m-1][1];
     fNew[n][m][2] = fOld[n+1][m][2];
@@ -243,32 +238,17 @@ function interiorNodes(n,m){
 }
 
 function momentCalculation(n,m){
-    //console.log("m: " + m + ", n: " + n);
-    //console.log(fNew[n][m]);
-    rho[n][m] = sum(fNew[n][m].slice(0, 9));
+    rho[n][m] = math.sum(fNew[n][m].slice(0, 9));
     u[n][m] = (fNew[n][m][1] + fNew[n][m][5] + fNew[n][m][8] - fNew[n][m][3] - fNew[n][m][6] - fNew[n][m][7])/rho[n][m];
     v[n][m] = (fNew[n][m][2] + fNew[n][m][5] + fNew[n][m][6] - fNew[n][m][4] - fNew[n][m][7] - fNew[n][m][8])/rho[n][m];
 }
 
 function fEqCalculation(n,m,k){
-    /*if(n == 0 || n == 3){
-        console.log("Before: " + fEq[1][1]);
-    }*/
     fEq[n][m][k] = w[k] * rho[n][m] * (1 + dotProduct(Ksi[k], [u[n][m], v[n][m]]) / (cs ** 2) + Math.pow(dotProduct(Ksi[k], [u[n][m], v[n][m]]), 2) / (2 * (cs ** 4)) - (Math.pow(u[n][m], 2) + Math.pow(v[n][m], 2)) / (2 * (cs ** 2)));
-    /*if(n == 0 || n == 3){
-        console.log("After: " + fEq[1][1]);
-    }*/
 }
 
 function collision(){
     fOld = fNew.map((row, i) => row.map((col, j) => col.map((value, k) => value - (value - fEq[i][j][k]) / Tau)));
-}
-
-function flipUV(u,v){
-    console.log("In flip function: ")
-    console.log(u);
-    let flippedU = [...u].reverse();
-    let flippedV = [...v].reverse();
 }
 
 function dotProduct(a, b) {
@@ -276,9 +256,42 @@ function dotProduct(a, b) {
 }
 
 
-calculate();
-//for (let k = 0; k < 9; k++){
-//    console.log("K: " + k);
-//    console.log("Ksi[0" + "][" + k + "]:" + Ksi[0][k]);
-//    console.log("Ksi[1" + "][" + k + "]:" + Ksi[1][k]);
-//}
+function setup() {
+  pixelDensity(1);  
+  createCanvas(Nx * scale, Ny * scale);
+  frameRate(60); // Control simulation speed
+}
+
+function draw() {
+  background(0);
+  // Run simulation step
+  if (stepCount % drawStep === 0) {
+    calculate();
+  }
+  stepCount++;
+
+  // Velocity Magnitude
+  loadPixels();
+  for (let n = 0; n < Nx; n++) {
+    for (let m = 0; m < Ny; m++) {
+      // Get the velocity magnitude for each particle  
+      let velMag = Math.sqrt(u[n][m] ** 2 + v[n][m] ** 2);
+      let brightness = Math.min(255, velMag * 500); // Scale
+
+      for (let dx = 0; dx < scale; dx++) {
+        for (let dy = 0; dy < scale; dy++) { 
+        // Display particles     
+        let x = n * scale + dx;
+        let y = (Ny - 1 - m) * scale + dy; // Flip y
+        let index = (x + y * width) * 4;
+
+        pixels[index] = brightness;     // R
+        pixels[index + 1] = brightness; // G
+        pixels[index + 2] = brightness; // B
+        pixels[index + 3] = 255;        // A
+        }
+      }
+    }
+  }
+  updatePixels();
+}
