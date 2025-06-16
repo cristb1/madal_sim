@@ -2,11 +2,12 @@
 
 // Declaring global variables
 let scale = 10; // Size of each cell on screen
+let scaleFactor = 1000 // Controls saturation of color mapping
 let drawStep = 1; // How often to draw frames
 let stepCount = 0;
 
-let Nx = 50;
-let Ny = 50;
+let Nx = 35;
+let Ny = 35;
 let Re = 100;
 let Mew = 0.1;
 let tStop = 20;
@@ -64,6 +65,7 @@ let fEq = Array.from({length: Nx}, () =>
 
 let rhoB;
 
+// Calculating Node Data
 function calculate(){
     // Calculation
     for (let t = 0; t < tStop; t++){
@@ -248,50 +250,71 @@ function fEqCalculation(n,m,k){
 }
 
 function collision(){
-    fOld = fNew.map((row, i) => row.map((col, j) => col.map((value, k) => value - (value - fEq[i][j][k]) / Tau)));
+    for (let i = 0; i < Nx; i++){
+        for (let j = 0; j < Ny; j++){
+            for (let k = 0; k < 9; k++){
+                fOld[i][j][k] = fNew[i][j][k] - (fNew[i][j][k] - fEq[i][j][k]) / Tau;
+            }
+        }
+    }
 }
 
 function dotProduct(a, b) {
     return a.reduce((sum, value, index) => sum + value * b[index], 0);
 }
 
-
+// Displaying the Simulation
 function setup() {
-  pixelDensity(1);  
+  pixelDensity(1); // Makes sure the website doesn't try to automatically fill out the area
+                   // Without it, the simulation will appear twice on one canvas
   createCanvas(Nx * scale, Ny * scale);
+  colorMode(HSB, 255); // Used for hue-based color mapping
   frameRate(60); // Control simulation speed
 }
 
 function draw() {
-  background(0);
-  // Run simulation step
-  if (stepCount % drawStep === 0) {
-    calculate();
-  }
-  stepCount++;
+    background(0);
 
-  // Velocity Magnitude
-  loadPixels();
-  for (let n = 0; n < Nx; n++) {
-    for (let m = 0; m < Ny; m++) {
-      // Get the velocity magnitude for each particle  
-      let velMag = Math.sqrt(u[n][m] ** 2 + v[n][m] ** 2);
-      let brightness = Math.min(255, velMag * 500); // Scale
+    // for testing resolution
+    /*if (frameCount % 60 === 0) {
+        console.log(`Frame: ${frameCount}, Time per frame: ${deltaTime.toFixed(2)} ms`);
+    }*/
 
-      for (let dx = 0; dx < scale; dx++) {
-        for (let dy = 0; dy < scale; dy++) { 
-        // Display particles     
-        let x = n * scale + dx;
-        let y = (Ny - 1 - m) * scale + dy; // Flip y
-        let index = (x + y * width) * 4;
-
-        pixels[index] = brightness;     // R
-        pixels[index + 1] = brightness; // G
-        pixels[index + 2] = brightness; // B
-        pixels[index + 3] = 255;        // A
-        }
-      }
+    // Run simulation step
+    if (stepCount % drawStep === 0) {
+        calculate();
     }
-  }
-  updatePixels();
+    stepCount++;
+    
+    loadPixels();
+    // Velocity
+    for (let n = 0; n < Nx; n++) {
+        for (let m = 0; m < Ny; m++) {
+            // for hsb, where hue is the direction with red being 0 degrees and blue being 255 degrees
+            let velMag = Math.sqrt(u[n][m] ** 2 + v[n][m] ** 2);
+            let velAngle = Math.atan2(v[n][m], u[n][m]);
+            let hue = map(velAngle, -Math.PI, Math.PI, 0 , 255);
+            let brightness = Math.min(255, velMag * scaleFactor); // Scale
+             
+            let col = color(hue, 255, brightness);
+            let r = red(col);
+            let g = green(col);
+            let b = blue(col);
+            
+            for (let dx = 0; dx < scale; dx++) {
+                for (let dy = 0; dy < scale; dy++) { 
+                    // Display particles    
+                    let x = n * scale + dx;
+                    let y = (Ny - 1 - m) * scale + dy; // Flip y
+                    let index = (x + y * width) * 4;
+                    
+                    pixels[index] = r;       // R
+                    pixels[index + 1] = g;   // G
+                    pixels[index + 2] = b;   // B
+                    pixels[index + 3] = 255; // A
+                    }
+                }
+        }
+    }
+    updatePixels();
 }
