@@ -1,8 +1,8 @@
 //import { sum } from 'mathjs';
 
 // Declaring global variables
-let scale = 10; // Size of each cell on screen
-let scaleFactor = 1000 // Controls saturation of color mapping
+let scaleCell = 10; // Size of each cell on screen
+let scaleColor = 1000 // Controls saturation of color mapping
 let drawStep = 1; // How often to draw frames
 let stepCount = 0;
 
@@ -267,7 +267,7 @@ function dotProduct(a, b) {
 function setup() {
   pixelDensity(1); // Makes sure the website doesn't try to automatically fill out the area
                    // Without it, the simulation will appear twice on one canvas
-  createCanvas(Nx * scale, Ny * scale);
+  createCanvas(Nx * scaleCell, Ny * scaleCell);
   colorMode(HSB, 255); // Used for hue-based color mapping
   frameRate(60); // Control simulation speed
 }
@@ -282,39 +282,45 @@ function draw() {
 
     // Run simulation step
     if (stepCount % drawStep === 0) {
-        calculate();
+        calculate(); // Data calculation
     }
     stepCount++;
     
-    loadPixels();
+    loadPixels(); // create pixels
     // Velocity
     for (let n = 0; n < Nx; n++) {
         for (let m = 0; m < Ny; m++) {
-            // for hsb, where hue is the direction with red being 0 degrees and blue being 255 degrees
+            // For hsb method of color mapping, hue is the direction, red being 0 degrees and blue being 255 degrees
             let velMag = Math.sqrt(u[n][m] ** 2 + v[n][m] ** 2);
             let velAngle = Math.atan2(v[n][m], u[n][m]);
-            let hue = map(velAngle, -Math.PI, Math.PI, 0 , 255);
-            let brightness = Math.min(255, velMag * scaleFactor); // Scale
+            let hue = map(velAngle, -Math.PI, Math.PI, 0 , 255); // Direction representation
+            let brightness = Math.min(255, velMag * scaleColor); // Magnitude representation
              
-            let col = color(hue, 255, brightness);
+            let col = color(hue, 255, brightness); 
             let r = red(col);
             let g = green(col);
             let b = blue(col);
             
-            for (let dx = 0; dx < scale; dx++) {
-                for (let dy = 0; dy < scale; dy++) { 
+            for (let dx = 0; dx < scaleCell; dx++) {
+                for (let dy = 0; dy < scaleCell; dy++) { 
                     // Display particles    
-                    let x = n * scale + dx;
-                    let y = (Ny - 1 - m) * scale + dy; // Flip y
+                    let x = n * scaleCell + dx;
+                    let y = (Ny - 1 - m) * scaleCell + dy; // Flip y
                     let index = (x + y * width) * 4;
                     
+                    // In p5.js, each pixel is made of 4 elements of the array, i.e. [0] through [3] is the first pixel
+                    // Each element represents a RGB value of the pixel
                     pixels[index] = r;       // R
                     pixels[index + 1] = g;   // G
                     pixels[index + 2] = b;   // B
-                    pixels[index + 3] = 255; // A
+                    pixels[index + 3] = 255; // A (is on a 0 to 255 scale instead of a 0.0 to 1.0 scale)
                     }
                 }
         }
     }
-    updatePixels();
+    updatePixels(); // update pixels based on coloration after pixels were loaded
+
+    // Pressure
+    // Re = (u times d) / [(Tau - 0.5) times cs^2] 
+    // Mew = (Tau - 0.5) times cs^2 
 }
