@@ -2,7 +2,7 @@
 
 // Declaring global variables
 let scaleCell = 10; // Size of each cell on screen
-let scaleColor = 1000 // Controls saturation of color mapping
+let scaleColor = 850 // Controls saturation of color mapping
 let drawStep = 1; // How often to draw frames
 let stepCount = 0;
 
@@ -276,9 +276,9 @@ function draw() {
     background(0);
 
     // for testing resolution
-    /*if (frameCount % 60 === 0) {
+    if (frameCount % 60 === 0) {
         console.log(`Frame: ${frameCount}, Time per frame: ${deltaTime.toFixed(2)} ms`);
-    }*/
+    }
 
     // Run simulation step
     if (stepCount % drawStep === 0) {
@@ -290,13 +290,15 @@ function draw() {
     // Velocity
     for (let n = 0; n < Nx; n++) {
         for (let m = 0; m < Ny; m++) {
-            // For hsb method of color mapping, hue is the direction, red being 0 degrees and blue being 255 degrees
+            // For hsb method of color mapping, hue is the direction, red being 0 degrees
             let velMag = Math.sqrt(u[n][m] ** 2 + v[n][m] ** 2);
             let velAngle = Math.atan2(v[n][m], u[n][m]);
             let hue = map(velAngle, -Math.PI, Math.PI, 0 , 255); // Direction representation
             let brightness = Math.min(255, velMag * scaleColor); // Magnitude representation
-             
+            
+            // Get the color of the hue
             let col = color(hue, 255, brightness); 
+            // Gettin each RGB out of the hue
             let r = red(col);
             let g = green(col);
             let b = blue(col);
