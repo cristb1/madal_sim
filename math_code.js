@@ -292,16 +292,23 @@ function draw() {
         for (let m = 0; m < Ny; m++) {
             // For hsb method of color mapping, hue is the direction, red being 0 degrees
             let velMag = Math.sqrt(u[n][m] ** 2 + v[n][m] ** 2);
-            let velAngle = Math.atan2(v[n][m], u[n][m]);
-            let hue = map(velAngle, -Math.PI, Math.PI, 0 , 255); // Direction representation
-            let brightness = Math.min(255, velMag * scaleColor); // Magnitude representation
+            //let velAngle = Math.atan2(v[n][m], u[n][m]);
+            //let velMin = 0;
+            //let velMax = 0.1;
+            //let t = map(velMag, velMin, velMax, 0, 1);
+            //let hue = map(velMag, velMin, velMax, 255, 0); // Direction representation
+            //let brightness = Math.min(255, velMag * scaleColor); // Magnitude representation
             
             // Get the color of the hue
-            let col = color(hue, 255, brightness); 
+            //let col = color(hue, 255, brightness); 
+
             // Gettin each RGB out of the hue
-            let r = red(col);
-            let g = green(col);
-            let b = blue(col);
+            //let r = red(col);
+            //let g = green(col);
+            //let b = blue(col);
+            /*let r = lerp(0, 255, t);
+            let g = 0;
+            let b = lerp(255, 0, t);*/
             
             for (let dx = 0; dx < scaleCell; dx++) {
                 for (let dy = 0; dy < scaleCell; dy++) { 

@@ -5,5 +5,5 @@ html, body {
 
 canvas {
   display: block;
-  rotate: -90deg;
+  rotate: 90deg;
 }
