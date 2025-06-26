@@ -1,6 +1,6 @@
 //import { sum } from 'mathjs';
 // Declaring global variables
-const scaleCell = 10; // Size of each cell on screen
+const scaleCell = 8; // Size of each cell on screen
 const scaleColor = 5; // Scale factor for visualization because velocity magnitudes are really small
 const drawStep = 2; // How often to draw frames
 let stepCount = 0;
@@ -9,7 +9,7 @@ let Nx = 50;
 let Ny = 50;
 let Re = 100;
 let Mew = 0.1;
-let tStop = 20;
+//let tStop = 1;
     
 let u = Array.from({length: Nx}, () => 
     Array(Ny).fill(1)
@@ -91,7 +91,7 @@ function draw() {
     // Run simulation step
     if (stepCount % drawStep === 0) {
         // Data calculation
-        for (let t = 0; t < tStop; t++){
+//        for (let t = 0; t < tStop; t++){
         // Streaming for all interior nodes and for boundary nodes
         for (let m = 0; m < Nx; m++){ // x coordinates
             for (let n = 0; n < Ny; n++){ // y coordinates
@@ -252,7 +252,7 @@ function draw() {
             }
         }
     }
-}
+//}
     /*}
     stepCount++;*/
 //if (stepCount % drawStep === 0) {
