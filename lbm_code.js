@@ -1,4 +1,3 @@
-//import { sum } from 'mathjs';
 // Declaring global variables
 const scaleCell = 8; // Size of each cell on screen
 const scaleColor = 5; // Scale factor for visualization because velocity magnitudes are really small
@@ -64,6 +63,10 @@ let fEq = Array.from({length: Nx}, () =>
 
 let rhoB;
 
+/*function dotProduct(a,b){
+    return a.reduce((sum, value, index) => sum + value * b[index], 0);
+}*/
+
 // Displaying the Simulation
 function setup() {
     pixelDensity(1); // Makes sure the website doesn't try to automatically fill out the area
@@ -95,12 +98,10 @@ function draw() {
         // Streaming for all interior nodes and for boundary nodes
         for (let m = 0; m < Nx; m++){ // x coordinates
             for (let n = 0; n < Ny; n++){ // y coordinates
-                fNew[n][m][0] = fOld[n][m][0];
                 if (n == 0){ // top boundary
-                    fNew[n][m][2] = fOld[n+1][m][2];
                     if (m == 0){ // top left corner nodes
-                        //fNew[n][m][0] = fOld[n][m][0];
-                        //fNew[n][m][2] = fOld[n+1][m][2];
+                        fNew[n][m][0] = fOld[n][m][0];
+                        fNew[n][m][2] = fOld[n+1][m][2];
                         fNew[n][m][3] = fOld[n][m+1][3];
                         fNew[n][m][6] = fOld[n+1][m+1][6];
                         
@@ -112,9 +113,9 @@ function draw() {
                         fNew[n][m][5] = (rhoB - fNew[n][m][0] - fNew[n][m][1] - fNew[n][m][2] - fNew[n][m][3] - fNew[n][m][4] - fNew[n][m][6] - fNew[n][m][8])/2;
                         fNew[n][m][7] = fNew[n][m][5];
                     }else if (m == (Nx - 1)){ // top right corner nodes
-                    //fNew[n][m][0] = fOld[n][m][0];
+                    fNew[n][m][0] = fOld[n][m][0];
                     fNew[n][m][1] = fOld[n][m-1][1];
-                    //fNew[n][m][2] = fOld[n+1][m][2];
+                    fNew[n][m][2] = fOld[n+1][m][2];
                     fNew[n][m][5] = fOld[n+1][m-1][5];
                     
                     fNew[n][m][3] = fNew[n][m][1];
@@ -125,9 +126,9 @@ function draw() {
                     fNew[n][m][6] = (rhoB-fNew[n][m][0] - fNew[n][m][1] - fNew[n][m][2] - fNew[n][m][3] - fNew[n][m][4] - fNew[n][m][5] - fNew[n][m][7])/2;
                     fNew[n][m][8] = fNew[n][m][6];
                 }else{ // all other top nodes
-                    //fNew[n][m][0] = fOld[n][m][0];
+                    fNew[n][m][0] = fOld[n][m][0];
                     fNew[n][m][1] = fOld[n][m-1][1];
-                    //fNew[n][m][2] = fOld[n+1][m][2];
+                    fNew[n][m][2] = fOld[n+1][m][2];
                     fNew[n][m][3] = fOld[n][m+1][3];
                     fNew[n][m][5] = fOld[n+1][m-1][5];
                     fNew[n][m][6] = fOld[n+1][m+1][6];
@@ -138,46 +139,44 @@ function draw() {
                     fNew[n][m][8] = fNew[n][m][6] + (fNew[n][m][3] - fNew[n][m][1])/2 + rhoB*uLid/2;
                 }
             }else if(n == (Ny - 1)){ // bottom boundary
-                fNew[n][m][4] = fOld[n-1][m][4];
-                fNew[n][m][2] = fNew[n][m][4];
                 if (m == 0){ // bottom left nodes
-                    //fNew[n][m][0] = fOld[n][m][0];
+                    fNew[n][m][0] = fOld[n][m][0];
                     fNew[n][m][3] = fOld[n][m+1][3];
-                    //fNew[n][m][4] = fOld[n-1][m][4];
+                    fNew[n][m][4] = fOld[n-1][m][4];
                     fNew[n][m][7] = fOld[n-1][m+1][7];
                     
                     fNew[n][m][1] = fNew[n][m][3];
-                    //fNew[n][m][2] = fNew[n][m][4];
+                    fNew[n][m][2] = fNew[n][m][4];
                     fNew[n][m][5] = fNew[n][m][7];
                     rhoB = (rho[n-1][m] + rho[n][m+1])/2;
                     fNew[n][m][6] = (rhoB - fNew[n][m][0] - fNew[n][m][1] - fNew[n][m][2] - fNew[n][m][3] - fNew[n][m][4] - fNew[n][m][5] - fNew[n][m][7])/2;
                     fNew[n][m][8] = fNew[n][m][6];
                 }else if (m == (Nx - 1)){ // bottom right nodes
-                    //fNew[n][m][0] = fOld[n][m][0];
+                    fNew[n][m][0] = fOld[n][m][0];
                     fNew[n][m][1] = fOld[n][m-1][1];
-                    //fNew[n][m][4] = fOld[n-1][m][4];
+                    fNew[n][m][4] = fOld[n-1][m][4];
                     fNew[n][m][8] = fOld[n-1][m-1][8];
                     
                     fNew[n][m][3] = fNew[n][m][1];
-                    //fNew[n][m][2] = fNew[n][m][4];
+                    fNew[n][m][2] = fNew[n][m][4];
                     fNew[n][m][6] = fNew[n][m][8];
                     rhoB = (rho[n-1][m] + rho[n][m-1])/2;
                     fNew[n][m][5] = (rhoB - fNew[n][m][0] - fNew[n][m][1] - fNew[n][m][2] - fNew[n][m][3] - fNew[n][m][4] - fNew[n][m][6] - fNew[n][m][8])/2;
                     fNew[n][m][7] =  fNew[n][m][5];
                 }else{ // all other bottom nodes
-                    //fNew[n][m][0] = fOld[n][m][0];
+                    fNew[n][m][0] = fOld[n][m][0];
                     fNew[n][m][1] = fOld[n][m-1][1];
                     fNew[n][m][3] = fOld[n][m+1][3];
-                    //fNew[n][m][4] = fOld[n-1][m][4];
+                    fNew[n][m][4] = fOld[n-1][m][4];
                     fNew[n][m][7] = fOld[n-1][m+1][7];
                     fNew[n][m][8] = fOld[n-1][m-1][8];
                     
-                    //fNew[n][m][2] = fNew[n][m][4];
+                    fNew[n][m][2] = fNew[n][m][4];
                     fNew[n][m][5] = fNew[n][m][7] + (fNew[n][m][3] - fNew[n][m][1])/2;
                     fNew[n][m][6] = fNew[n][m][8] + (fNew[n][m][1] - fNew[n][m][3])/2;
                 }
             }else if (m == 0){ // left boundary
-                //fNew[n][m][0] = fOld[n][m][0];
+                fNew[n][m][0] = fOld[n][m][0];
                 fNew[n][m][2] = fOld[n+1][m][2];
                 fNew[n][m][3] = fOld[n][m+1][3];
                 fNew[n][m][4] = fOld[n-1][m][4];
@@ -188,7 +187,7 @@ function draw() {
                 fNew[n][m][5] = fNew[n][m][7] + (fNew[n][m][4] - fNew[n][m][2])/2;
                 fNew[n][m][8] = fNew[n][m][6] + (fNew[n][m][2] - fNew[n][m][4])/2;
             }else if (m == (Nx - 1)){ // right boundary
-                //fNew[n][m][0] = fOld[n][m][0]; 
+                fNew[n][m][0] = fOld[n][m][0]; 
                 fNew[n][m][1] = fOld[n][m-1][1];
                 fNew[n][m][2] = fOld[n+1][m][2];
                 fNew[n][m][4] = fOld[n-1][m][4];
@@ -199,7 +198,7 @@ function draw() {
                 fNew[n][m][6] = fNew[n][m][8] + (fNew[n][m][4] - fNew[n][m][2])/2;
                 fNew[n][m][7] = fNew[n][m][5] + (fNew[n][m][2] - fNew[n][m][4])/2;
             }else{ // interior nodes
-                //fNew[n][m][0] = fOld[n][m][0];
+                fNew[n][m][0] = fOld[n][m][0];
                 fNew[n][m][1] = fOld[n][m-1][1];
                 fNew[n][m][2] = fOld[n+1][m][2];
                 fNew[n][m][3] = fOld[n][m+1][3];
@@ -226,6 +225,7 @@ function draw() {
         for (let m = 0; m < Nx; m++){
             for (let n = 0; n < Ny; n++){
                 for(let k = 0; k < 9; k++){
+                    //fEq[n][m][k] = w[k] * rho[n][m] * (1 + dotProduct(Ksi[k], [u[n][m], v[n][m]]) / (cs ** 2) + Math.pow(dotProduct(Ksi[k], [u[n][m], v[n][m]]), 2) / (2 * (cs ** 4)) - (Math.pow(u[n][m], 2) + Math.pow(v[n][m], 2)) / (2 * (cs ** 2)));
                     let uX = u[n][m];
                     let uY = v[n][m];
                     let KsiX = Ksi[k][0];
