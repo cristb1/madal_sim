@@ -3,6 +3,9 @@ const scaleCell = 8; // Size of each cell on screen
 const scaleColor = 5; // Scale factor for visualization because velocity magnitudes are really small
 const drawStep = 2; // How often to draw frames
 let stepCount = 0;
+let simTypeSelector;
+let velocityFlag = true;
+let densityFlag = false;
 
 let Nx = 50;
 let Ny = 50;
@@ -61,6 +64,16 @@ let fEq = Array.from({length: Nx}, () =>
     )
 );
 
+for(let z = 0; z < 9; z++){
+for(let m = 0; m < Nx; m++){
+    for(let n = 0; n < Ny; n++){
+        fOld[n][m][z] = w[z] * fOld[n][m][z];
+        fNew[n][m][z] = w[z] * fNew[n][m][z];
+        fEq[n][m][z] = w[z] * fEq[n][m][z];
+    }
+}
+}
+
 let rhoB;
 
 /*function dotProduct(a,b){
@@ -74,6 +87,11 @@ function setup() {
     
     // what the sim will be displayed on
     createCanvas(Nx * scaleCell, Ny * scaleCell);
+    simTypeSelector = createSelect();
+    simTypeSelector.position(0, Nx * scaleCell + 1);
+    simTypeSelector.option('Velocity');
+    simTypeSelector.option('Density');
+    simTypeSelector.selected('Velocity');
     noSmooth();
 
     // what the sim itself will be calculated on
@@ -85,11 +103,18 @@ function setup() {
 
 function draw() {
     sim.background(0);
+    if(simTypeSelector.selected() == 'Velocity'){
+        velocityFlag = true;
+        densityFlag = false;
+    }else if(simTypeSelector.selected() == 'Density'){
+        velocityFlag = false;
+        densityFlag = true;
+    }
 
     // for testing resolution
-    if (frameCount % 60 === 0) {
+    /*if (frameCount % 60 === 0) {
         console.log(`Frame: ${frameCount}, Time per frame: ${deltaTime.toFixed(2)} ms`);
-    }
+    }*/
 
     // Run simulation step
     if (stepCount % drawStep === 0) {
@@ -215,6 +240,7 @@ function draw() {
         for (let m = 0; m < Nx; m++){
             for (let n = 0; n < Ny; n++){
                 let f = fNew[n][m];
+                //console.log(`f: ${f}`);
                 rho[n][m] = f[0] + f[1] + f[2] + f[3] + f[4] + f[5] + f[6] + f[7] + f[8];
                 u[n][m] = (fNew[n][m][1] + fNew[n][m][5] + fNew[n][m][8] - fNew[n][m][3] - fNew[n][m][6] - fNew[n][m][7])/rho[n][m];
                 v[n][m] = (fNew[n][m][2] + fNew[n][m][5] + fNew[n][m][6] - fNew[n][m][4] - fNew[n][m][7] - fNew[n][m][8])/rho[n][m];
@@ -258,8 +284,10 @@ function draw() {
 //if (stepCount % drawStep === 0) {
     sim.loadPixels(); // create pixels
     // Velocity
-    for (let n = 0; n < Nx; n++) {
-        for (let m = 0; m < Ny; m++) {
+    if(velocityFlag){
+    for (let m = 0; m < Nx; m++) {
+        for (let n = 0; n < Ny; n++) {
+            console.log(u[n][m]);
             let velMag = Math.sqrt(u[n][m] ** 2 + v[n][m] ** 2);
             let velMagNormalized = constrain(velMag * scaleColor, 0, 1);
             
@@ -278,6 +306,31 @@ function draw() {
             
         }
     }
+}
+// Density
+if(densityFlag){
+    for (let n = 0; n < Nx; n++) {
+        for (let m = 0; m < Ny; m++) {
+            //console.log(`Density ${rho[n][m]}`);
+            let density = rho[n][m];
+            let densityNormalized = constrain(density, 0, 1);
+            
+            let [r,g,b] = turbo(densityNormalized);
+            // Display particles    
+            let x = n;
+            let y = (Ny - 1 - m); // Flip y
+            let index = (x + y * sim.width) * 4;
+                    
+            // In p5.js, each pixel is made of 4 elements of the array, i.e. [0] through [3] is the first pixel
+            // Each element represents a RGB value of the pixel
+            sim.pixels[index] = r;       // R
+            sim.pixels[index + 1] = g;   // G
+            sim.pixels[index + 2] = b;   // B
+            sim.pixels[index + 3] = 255; // A (is on a 0 to 255 scale instead of a 0.0 to 1.0 scale)
+            
+        }
+    }
+}
     sim.updatePixels(); // update pixels based on coloration after pixels were loaded
 
     background(0);
@@ -285,7 +338,4 @@ function draw() {
 }
 stepCount++;
 
-    // Density
-    // Re = (u times d) / [(Tau - 0.5) times cs^2] 
-    // Mew = (Tau - 0.5) times cs^2 
 }
