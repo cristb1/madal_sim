@@ -1,3 +1,7 @@
+// This code is what is inside the HTML except that the sliders are integrated differently. In this file, the sliders are dictated through p5.js.
+// Since Elementor did not allow that, I had to manually create and style a div for the sliders and its labels when putting the code into the HTML file
+// This code is not used directly anymore, but it is the file that I wrote the code on before moving it into the HTML file
+
 // Declaring global variables
 const scaleCell = 8; // Size of each cell on screen
 const scaleColor = 5; // Scale factor for visualization because velocity magnitudes are really small
