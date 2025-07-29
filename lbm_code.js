@@ -6,6 +6,13 @@ let stepCount = 0;
 let simTypeSelector;
 let velocityFlag = true;
 let densityFlag = false;
+let mewSlider;
+let mewSpan;
+let reSlider;
+let reSpan;
+let gridSlider;
+let gridSpan;
+let resetFlag = false;
 
 let Nx = 50;
 let Ny = 50;
@@ -41,11 +48,11 @@ const cs = 1/(Math.sqrt(3));
 
 const dx = 1;
 const dy = 1;
-const L = (Nx - 1)*dx;
+let L = (Nx - 1)*dx;
 
-const uLid = Re*Mew/L;
+let uLid = Re*Mew/L;
 
-const Tau = 3*Mew+0.5;
+let Tau = 3*Mew+0.5;
 
 let fNew = Array.from({length: Nx}, () => 
     Array.from({ length: Ny }, () => 
@@ -87,11 +94,37 @@ function setup() {
     
     // what the sim will be displayed on
     createCanvas(Nx * scaleCell, Ny * scaleCell);
+    
+    // select type of sim
     simTypeSelector = createSelect();
     simTypeSelector.position(0, Nx * scaleCell + 1);
     simTypeSelector.option('Velocity');
     simTypeSelector.option('Density');
-    simTypeSelector.selected('Velocity');
+    simTypeSelector.selected('Velocity'); //default visualization type
+
+    // mu slider
+    mewSlider = createSlider(0.1,0.32, Mew, 0.01);
+    mewSlider.position(150, 400);
+    mewSlider.size(80);
+    
+    mewSpan = createSpan("&#956" + ": " + Mew);
+    mewSpan.position(85,404);
+
+    // reynolds number slider
+    reSlider = createSlider(1,100, Re);
+    reSlider.position(150, 450);
+    reSlider.size(80);
+
+    reSpan = createSpan("Re: " + Re);
+    reSpan.position(85, 450);
+
+    // Nx slider
+    gridSlider = createSlider(50,100, Nx);
+    gridSlider.position(150, 500);
+    gridSpan = createSpan("Nx: " + Nx);
+    gridSpan.position(85, 500);
+
+
     noSmooth();
 
     // what the sim itself will be calculated on
@@ -103,6 +136,83 @@ function setup() {
 
 function draw() {
     sim.background(0);
+    if(Nx != gridSlider.value() || Mew != (mewSlider.value()) || Re != reSlider.value()){
+        resetFlag = true;
+    }
+    // was here before using the reset flag, will have to make sure removing it doesnt actually break anything before removing
+    Mew = (mewSlider.value());
+    mewSpan.html("&#956" + ": " + Mew);
+    reSpan.html("Re: " + Re);
+    gridSpan.html("Nx: " + Nx);
+    Re = (reSlider.value());
+    Nx = Ny = (gridSlider.value());
+    L = (Nx - 1)*dx;
+    uLid = Re*Mew/L;
+    Tau = 3*Mew+0.5;
+
+// if grid size changes, redo everything   
+if(resetFlag){
+    // resize canvas
+    resizeCanvas(Nx * scaleCell, Ny * scaleCell);
+    sim.resizeCanvas(Nx,Ny);
+
+    // resize inputs and text
+    simTypeSelector.position(0, Nx * scaleCell + 1);
+    mewSlider.position(150, height);
+    mewSpan.position(85, height);
+    reSlider.position(150, height+50);
+    reSpan.position(85, height+50);
+    gridSlider.position(150, height+100);
+    gridSpan.position(85, height+100);
+    
+    // reinitialize variables
+    Mew = (mewSlider.value());
+    mewSpan.html("&#956" + ": " + Mew);
+    reSpan.html("Re: " + Re);
+    gridSpan.html("Nx: " + Nx);
+    Re = (reSlider.value());
+    Nx = Ny = (gridSlider.value());
+    L = (Nx - 1)*dx;
+    uLid = Re*Mew/L;
+    Tau = 3*Mew+0.5;    
+u = Array.from({length: Nx}, () => 
+    Array(Ny).fill(1)
+);
+v = Array.from({length: Nx}, () => 
+    Array(Ny).fill(1)
+);
+rho = Array.from({length: Nx}, () => 
+    Array(Ny).fill(1)
+);
+fNew = Array.from({length: Nx}, () => 
+    Array.from({ length: Ny }, () => 
+        Array(9).fill(1)
+    )
+);
+fOld = Array.from({length: Nx}, () => 
+    Array.from({ length: Ny }, () => 
+        Array(9).fill(1)
+    )
+);
+
+fEq = Array.from({length: Nx}, () => 
+    Array.from({ length: Ny }, () => 
+        Array(9).fill(1)
+    )
+);
+for(let z = 0; z < 9; z++){
+for(let m = 0; m < Nx; m++){
+    for(let n = 0; n < Ny; n++){
+        fOld[n][m][z] = w[z] * fOld[n][m][z];
+        fNew[n][m][z] = w[z] * fNew[n][m][z];
+        fEq[n][m][z] = w[z] * fEq[n][m][z];
+    }
+}
+}
+}
+resetFlag = false;
+
+
     if(simTypeSelector.selected() == 'Velocity'){
         velocityFlag = true;
         densityFlag = false;
@@ -126,40 +236,52 @@ function draw() {
                 if (n == 0){ // top boundary
                     if (m == 0){ // top left corner nodes
                         fNew[n][m][0] = fOld[n][m][0];
+                        //fNew[n][m][1] = fOld[n][m+1][1]; // added
                         fNew[n][m][2] = fOld[n+1][m][2];
                         fNew[n][m][3] = fOld[n][m+1][3];
+                        //fNew[n][m][5] = fOld[n+1][m+1][5]; // added
                         fNew[n][m][6] = fOld[n+1][m+1][6];
                         
                         fNew[n][m][1] = fNew[n][m][3];
                         fNew[n][m][4] = fNew[n][m][2];
+                        //fNew[n][m][4] = fNew[n][m][1]; // tried to replace ^^
                         fNew[n][m][8] = fNew[n][m][6];
                         
-                        rhoB = (rho[n+1][m] + rho[n][m+1])/2;
+                        //rhoB = (rho[n+1][m] + rho[n][m+1])/2;
+                        rhoB = fNew[n][m].reduce((a,b) => a + b, 0);
                         fNew[n][m][5] = (rhoB - fNew[n][m][0] - fNew[n][m][1] - fNew[n][m][2] - fNew[n][m][3] - fNew[n][m][4] - fNew[n][m][6] - fNew[n][m][8])/2;
                         fNew[n][m][7] = fNew[n][m][5];
                     }else if (m == (Nx - 1)){ // top right corner nodes
                     fNew[n][m][0] = fOld[n][m][0];
                     fNew[n][m][1] = fOld[n][m-1][1];
                     fNew[n][m][2] = fOld[n+1][m][2];
+                    //fNew[n][m][3] = fOld[n][m-1][3]; // added
                     fNew[n][m][5] = fOld[n+1][m-1][5];
+                    fNew[n][m][6] = fOld[n+1][m][6];
                     
                     fNew[n][m][3] = fNew[n][m][1];
                     fNew[n][m][4] = fNew[n][m][2];
+                    //fNew[n][m][4] = fNew[n][m][1]; // tried to replace ^^
                     fNew[n][m][7] = fNew[n][m][5];
                     
-                    rhoB = (rho[n+1][m]+rho[n][m-1])/2;
+                    //rhoB = (rho[n+1][m]+rho[n][m-1])/2;
+                    rhoB = fNew[n][m].reduce((a,b) => a + b, 0);
                     fNew[n][m][6] = (rhoB-fNew[n][m][0] - fNew[n][m][1] - fNew[n][m][2] - fNew[n][m][3] - fNew[n][m][4] - fNew[n][m][5] - fNew[n][m][7])/2;
+                    //fNew[n][m][5] = (rhoB-fNew[n][m][0] - fNew[n][m][1] - fNew[n][m][2] - fNew[n][m][3] - fNew[n][m][4] - fNew[n][m][6] - fNew[n][m][8])/2;
                     fNew[n][m][8] = fNew[n][m][6];
                 }else{ // all other top nodes
                     fNew[n][m][0] = fOld[n][m][0];
                     fNew[n][m][1] = fOld[n][m-1][1];
                     fNew[n][m][2] = fOld[n+1][m][2];
                     fNew[n][m][3] = fOld[n][m+1][3];
+                    //fNew[n][m][4] = fOld[n][m+1][4]; // added
                     fNew[n][m][5] = fOld[n+1][m-1][5];
                     fNew[n][m][6] = fOld[n+1][m+1][6];
                     
                     fNew[n][m][4] = fNew[n][m][2];
-                    rhoB = fNew[n][m][0] + fNew[n][m][1] + fNew[n][m][3] + 2*(fNew[n][m][2] + fNew[n][m][5] + fNew[n][m][6]);
+
+                    //rhoB = fNew[n][m][0] + fNew[n][m][1] + fNew[n][m][3] + 2*(fNew[n][m][2] + fNew[n][m][5] + fNew[n][m][6]);
+                    rhoB = fNew[n][m].reduce((a,b) => a + b, 0);
                     fNew[n][m][7] = fNew[n][m][5] + (fNew[n][m][1] - fNew[n][m][3])/2 - rhoB*uLid/2;
                     fNew[n][m][8] = fNew[n][m][6] + (fNew[n][m][3] - fNew[n][m][1])/2 + rhoB*uLid/2;
                 }
@@ -173,9 +295,11 @@ function draw() {
                     fNew[n][m][1] = fNew[n][m][3];
                     fNew[n][m][2] = fNew[n][m][4];
                     fNew[n][m][5] = fNew[n][m][7];
-                    rhoB = (rho[n-1][m] + rho[n][m+1])/2;
+                    //rhoB = (rho[n-1][m] + rho[n][m+1])/2;
+                    rhoB = fNew[n][m].reduce((a,b) => a + b, 0);
                     fNew[n][m][6] = (rhoB - fNew[n][m][0] - fNew[n][m][1] - fNew[n][m][2] - fNew[n][m][3] - fNew[n][m][4] - fNew[n][m][5] - fNew[n][m][7])/2;
                     fNew[n][m][8] = fNew[n][m][6];
+
                 }else if (m == (Nx - 1)){ // bottom right nodes
                     fNew[n][m][0] = fOld[n][m][0];
                     fNew[n][m][1] = fOld[n][m-1][1];
@@ -185,9 +309,11 @@ function draw() {
                     fNew[n][m][3] = fNew[n][m][1];
                     fNew[n][m][2] = fNew[n][m][4];
                     fNew[n][m][6] = fNew[n][m][8];
-                    rhoB = (rho[n-1][m] + rho[n][m-1])/2;
+                    //rhoB = (rho[n-1][m] + rho[n][m-1])/2;
+                    rhoB = fNew[n][m].reduce((a,b) => a + b, 0);
                     fNew[n][m][5] = (rhoB - fNew[n][m][0] - fNew[n][m][1] - fNew[n][m][2] - fNew[n][m][3] - fNew[n][m][4] - fNew[n][m][6] - fNew[n][m][8])/2;
                     fNew[n][m][7] =  fNew[n][m][5];
+
                 }else{ // all other bottom nodes
                     fNew[n][m][0] = fOld[n][m][0];
                     fNew[n][m][1] = fOld[n][m-1][1];
@@ -201,7 +327,7 @@ function draw() {
                     fNew[n][m][6] = fNew[n][m][8] + (fNew[n][m][1] - fNew[n][m][3])/2;
                 }
             }else if (m == 0){ // left boundary
-                fNew[n][m][0] = fOld[n][m][0];
+                fNew[n][m][0] = fOld[n][m][0]; // original
                 fNew[n][m][2] = fOld[n+1][m][2];
                 fNew[n][m][3] = fOld[n][m+1][3];
                 fNew[n][m][4] = fOld[n-1][m][4];
@@ -211,6 +337,7 @@ function draw() {
                 fNew[n][m][1] = fNew[n][m][3];
                 fNew[n][m][5] = fNew[n][m][7] + (fNew[n][m][4] - fNew[n][m][2])/2;
                 fNew[n][m][8] = fNew[n][m][6] + (fNew[n][m][2] - fNew[n][m][4])/2;
+
             }else if (m == (Nx - 1)){ // right boundary
                 fNew[n][m][0] = fOld[n][m][0]; 
                 fNew[n][m][1] = fOld[n][m-1][1];
@@ -285,11 +412,24 @@ function draw() {
     sim.loadPixels(); // create pixels
     // Velocity
     if(velocityFlag){
+    let minVel = u[0][0];
+    let maxVel = u[0][0];
+    for(let i = 0; i < Nx; i++){
+        for(let j = 0; j < Ny; j++){
+            if(maxVel < u[i][j]){
+                maxVel = u[i][j];
+            }else if(minVel > u[i][j]){
+                minVel = u[i][j];
+            }
+        }
+    }
+    console.log(`Min is ${minVel}`);    
     for (let m = 0; m < Nx; m++) {
         for (let n = 0; n < Ny; n++) {
-            console.log(u[n][m]);
+            //console.log(u[n][m]);
             let velMag = Math.sqrt(u[n][m] ** 2 + v[n][m] ** 2);
-            let velMagNormalized = constrain(velMag * scaleColor, 0, 1);
+            //let velMagNormalized = constrain(velMag * scaleColor, 0, 1);
+            let velMagNormalized = constrain(velMag/uLid, 0, 1);
             
             let [r,g,b] = turbo(velMagNormalized);
             // Display particles    
@@ -309,13 +449,28 @@ function draw() {
 }
 // Density
 if(densityFlag){
+    let minDensity = rho[0][0];
+    let maxDensity = rho[0][0];
+    for(let i = 0; i < Nx; i++){
+        for(let j = 0; j < Ny; j++){
+            if(maxDensity < rho[i][j]){
+                maxDensity = rho[i][j];
+            }else if(minDensity > rho[i][j]){
+                minDensity = rho[i][j];
+            }
+        }
+    }
+    console.log(`Max is ${maxDensity}`);
+
     for (let n = 0; n < Nx; n++) {
         for (let m = 0; m < Ny; m++) {
-            //console.log(`Density ${rho[n][m]}`);
+            let minDensity = 0.95;
+            let maxDensity = 1.1;
             let density = rho[n][m];
-            let densityNormalized = constrain(density, 0, 1);
+            let densityNormalized = constrain(((density - minDensity) / (maxDensity - minDensity)), 0, 1);
             
             let [r,g,b] = turbo(densityNormalized);
+
             // Display particles    
             let x = n;
             let y = (Ny - 1 - m); // Flip y
