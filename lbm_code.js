@@ -14,12 +14,12 @@ let gridSlider;
 let gridSpan;
 let resetFlag = false;
 
+// default values for grid size, Reynolds, and Mew
 let Nx = 50;
 let Ny = 50;
 let Re = 100;
 let Mew = 0.1;
-//let tStop = 1;
-    
+
 let u = Array.from({length: Nx}, () => 
     Array(Ny).fill(1)
 );
