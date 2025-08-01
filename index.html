@@ -12,7 +12,7 @@
 <body>
     <div id="sim"></div><div id="controls" style="margin-top: 30px"></div>
     <script>
-       // Declaring global variables
+// Declaring global variables
 const scaleCell = 8; // Size of each cell on screen
 const scaleColor = 5; // Scale factor for visualization because velocity magnitudes are really small
 const drawStep = 2; // How often to draw frames
@@ -29,22 +29,29 @@ let gridSpan;
 let resetFlag = false;
 let canvas;
 
+// Number of nodes in x-direction
 let Nx = 50;
+// Number of nodes in y-direction
 let Ny = 50;
+// Reynolds number
 let Re = 100;
+// Kinematic viscosity
 let Mew = 0.1;
-//let tStop = 1;
-    
+   
+// Initial Velocity
 let u = Array.from({length: Nx}, () => 
     Array(Ny).fill(1)
 );
+// Final Velocity
 let v = Array.from({length: Nx}, () => 
     Array(Ny).fill(1)
 );
+// Density
 let rho = Array.from({length: Nx}, () => 
     Array(Ny).fill(1)
 );
 
+// D2Q9 Lattice
 const Ksi = [
   [0, 0],
   [1, 0],
@@ -57,35 +64,46 @@ const Ksi = [
   [1, -1]
 ];
 
+// Weight
 const w = [4/9, 1/9, 1/9, 1/9, 1/9, 1/36, 1/36, 1/36, 1/36];
 
+// Speed of Sound
 const cs = 1/(Math.sqrt(3));
 
+// Spacing in the x-direction
 const dx = 1;
+// Spacing in the y-direction
 const dy = 1;
+// Domain Size
 let L = (Nx - 1)*dx;
 
+// Velocity of the moving lid
 let uLid = Re*Mew/L;
 
+// Relaxation time
 let Tau = 3*Mew+0.5;
 
+// Distribution Functions
+// New PDF Matrix
 let fNew = Array.from({length: Nx}, () => 
     Array.from({ length: Ny }, () => 
         Array(9).fill(1)
     )
 );
+// Old PDF Matrix
 let fOld = Array.from({length: Nx}, () => 
     Array.from({ length: Ny }, () => 
         Array(9).fill(1)
     )
 );
-
+// Equilibrium PDF Matrix
 let fEq = Array.from({length: Nx}, () => 
     Array.from({ length: Ny }, () => 
         Array(9).fill(1)
     )
 );
 
+// Set weights on distribution functions
 for(let z = 0; z < 9; z++){
 for(let m = 0; m < Nx; m++){
     for(let n = 0; n < Ny; n++){
@@ -97,10 +115,6 @@ for(let m = 0; m < Nx; m++){
 }
 
 let rhoB;
-
-/*function dotProduct(a,b){
-    return a.reduce((sum, value, index) => sum + value * b[index], 0);
-}*/
 
 // Displaying the Simulation
 function setup() {
@@ -145,7 +159,6 @@ function setup() {
     reSlider.parent(reRow);
 
     reSpan = createSpan("Re: " + Re);
-    //reSpan.position(85, 30);
     reSpan.parent(reRow);
 
     // Nx slider
@@ -154,12 +167,10 @@ function setup() {
     gridRow.class('slider-row');
     gridRow.parent('controls');
     gridSlider = createSlider(50,100, Nx);
-    //gridSlider.position(150, 60);
     gridSlider.size(80);
     gridSlider.parent(gridRow);
 
     gridSpan = createSpan("Nx: " + Nx);
-    //gridSpan.position(85, 60);
     gridSpan.parent(gridRow);
 
 
@@ -178,6 +189,7 @@ function draw() {
         resetFlag = true;
     }
     // was here before using the reset flag, will have to make sure removing it doesnt actually break anything before removing
+    // update: mew and reynolds are fine but it does mess up the grid size, so we will keep this for now
     Mew = (mewSlider.value());
     mewSpan.html("&#956" + ": " + Mew);
     reSpan.html("Re: " + Re);
@@ -188,7 +200,7 @@ function draw() {
     uLid = Re*Mew/L;
     Tau = 3*Mew+0.5;
 
-// if grid size changes, redo everything   
+// if a slider value changes, reset everything   
 if(resetFlag){
     // resize canvas
     resizeCanvas(Nx * scaleCell, Ny * scaleCell);
@@ -218,7 +230,7 @@ select('#controls').style('margin-top', (canvasHeight * 0.05) + 'px');
     Nx = Ny = (gridSlider.value());
     L = (Nx - 1)*dx;
     uLid = Re*Mew/L;
-    Tau = 3*Mew+0.5;    
+    Tau = 3*Mew+0.5;        
 u = Array.from({length: Nx}, () => 
     Array(Ny).fill(1)
 );

@@ -1,6 +1,7 @@
 // This code is what is inside the HTML except that the sliders are integrated differently. In this file, the sliders are dictated through p5.js.
 // Since Elementor did not allow that, I had to manually create and style a div for the sliders and its labels when putting the code into the HTML file
 // This code is not used directly anymore, but it is the file that I wrote the code on before moving it into the HTML file
+// This file is on Github for reference
 
 // Declaring global variables
 const scaleCell = 8; // Size of each cell on screen
@@ -19,21 +20,29 @@ let gridSpan;
 let resetFlag = false;
 
 // default values for grid size, Reynolds, and Mew
+// Number of nodes in x-direction
 let Nx = 50;
+// Number of nodes in y-direction
 let Ny = 50;
+// Reynolds number
 let Re = 100;
+// Kinematic viscosity
 let Mew = 0.1;
 
+// Initial velocity
 let u = Array.from({length: Nx}, () => 
     Array(Ny).fill(1)
 );
+// Final Velocity
 let v = Array.from({length: Nx}, () => 
     Array(Ny).fill(1)
 );
+// Density
 let rho = Array.from({length: Nx}, () => 
     Array(Ny).fill(1)
 );
 
+// D2Q9 Lattice
 const Ksi = [
   [0, 0],
   [1, 0],
@@ -46,18 +55,26 @@ const Ksi = [
   [1, -1]
 ];
 
+// Weight
 const w = [4/9, 1/9, 1/9, 1/9, 1/9, 1/36, 1/36, 1/36, 1/36];
 
+// Speed of Sound
 const cs = 1/(Math.sqrt(3));
 
+// Spacing in the x-direction
 const dx = 1;
+// Spacing in the y-direction
 const dy = 1;
+// Domain Size
 let L = (Nx - 1)*dx;
 
+// Velocity of the moving lid
 let uLid = Re*Mew/L;
 
+// Relaxation time
 let Tau = 3*Mew+0.5;
 
+// Distribution Functions
 let fNew = Array.from({length: Nx}, () => 
     Array.from({ length: Ny }, () => 
         Array(9).fill(1)
@@ -86,10 +103,6 @@ for(let m = 0; m < Nx; m++){
 }
 
 let rhoB;
-
-/*function dotProduct(a,b){
-    return a.reduce((sum, value, index) => sum + value * b[index], 0);
-}*/
 
 // Displaying the Simulation
 function setup() {
@@ -144,6 +157,7 @@ function draw() {
         resetFlag = true;
     }
     // was here before using the reset flag, will have to make sure removing it doesnt actually break anything before removing
+    // update: mew and reynolds are fine but it does mess up the grid size, so we will keep this for now
     Mew = (mewSlider.value());
     mewSpan.html("&#956" + ": " + Mew);
     reSpan.html("Re: " + Re);
@@ -154,7 +168,7 @@ function draw() {
     uLid = Re*Mew/L;
     Tau = 3*Mew+0.5;
 
-// if grid size changes, redo everything   
+// if a slider value changes, redo everything   
 if(resetFlag){
     // resize canvas
     resizeCanvas(Nx * scaleCell, Ny * scaleCell);
@@ -233,22 +247,18 @@ resetFlag = false;
     // Run simulation step
     if (stepCount % drawStep === 0) {
         // Data calculation
-//        for (let t = 0; t < tStop; t++){
         // Streaming for all interior nodes and for boundary nodes
         for (let m = 0; m < Nx; m++){ // x coordinates
             for (let n = 0; n < Ny; n++){ // y coordinates
                 if (n == 0){ // top boundary
                     if (m == 0){ // top left corner nodes
                         fNew[n][m][0] = fOld[n][m][0];
-                        //fNew[n][m][1] = fOld[n][m+1][1]; // added
                         fNew[n][m][2] = fOld[n+1][m][2];
                         fNew[n][m][3] = fOld[n][m+1][3];
-                        //fNew[n][m][5] = fOld[n+1][m+1][5]; // added
                         fNew[n][m][6] = fOld[n+1][m+1][6];
                         
                         fNew[n][m][1] = fNew[n][m][3];
                         fNew[n][m][4] = fNew[n][m][2];
-                        //fNew[n][m][4] = fNew[n][m][1]; // tried to replace ^^
                         fNew[n][m][8] = fNew[n][m][6];
                         
                         //rhoB = (rho[n+1][m] + rho[n][m+1])/2;
