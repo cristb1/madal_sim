@@ -142,7 +142,7 @@ function setup() {
     gridSpan.position(85, 500);
 
 
-    noSmooth();
+    noSmooth(); // makes sure that performance isn't spent on anti-aliasing the pixels
 
     // what the sim itself will be calculated on
     sim = createGraphics(Nx, Ny);
@@ -153,13 +153,14 @@ function setup() {
 
 function draw() {
     sim.background(0);
+    // Check if a slider value has changed
     if(Nx != gridSlider.value() || Mew != (mewSlider.value()) || Re != reSlider.value()){
         resetFlag = true;
     }
     // was here before using the reset flag, will have to make sure removing it doesnt actually break anything before removing
     // update: mew and reynolds are fine but it does mess up the grid size, so we will keep this for now
     Mew = (mewSlider.value());
-    mewSpan.html("&#956" + ": " + Mew);
+    mewSpan.html("&#956" + ": " + Mew); //&#956 is the Unicode for mew
     reSpan.html("Re: " + Re);
     gridSpan.html("Nx: " + Nx);
     Re = (reSlider.value());
@@ -168,7 +169,7 @@ function draw() {
     uLid = Re*Mew/L;
     Tau = 3*Mew+0.5;
 
-// if a slider value changes, redo everything   
+// if a slider value changes, reset everything   
 if(resetFlag){
     // resize canvas
     resizeCanvas(Nx * scaleCell, Ny * scaleCell);
@@ -239,14 +240,14 @@ resetFlag = false;
         densityFlag = true;
     }
 
-    // for testing resolution
+    // For testing resolution/performance
+    // It shows the amount of milliseconds each frame takes
     /*if (frameCount % 60 === 0) {
         console.log(`Frame: ${frameCount}, Time per frame: ${deltaTime.toFixed(2)} ms`);
     }*/
 
-    // Run simulation step
+    // -- Node Calculation --
     if (stepCount % drawStep === 0) {
-        // Data calculation
         // Streaming for all interior nodes and for boundary nodes
         for (let m = 0; m < Nx; m++){ // x coordinates
             for (let n = 0; n < Ny; n++){ // y coordinates
@@ -261,7 +262,6 @@ resetFlag = false;
                         fNew[n][m][4] = fNew[n][m][2];
                         fNew[n][m][8] = fNew[n][m][6];
                         
-                        //rhoB = (rho[n+1][m] + rho[n][m+1])/2;
                         rhoB = fNew[n][m].reduce((a,b) => a + b, 0);
                         fNew[n][m][5] = (rhoB - fNew[n][m][0] - fNew[n][m][1] - fNew[n][m][2] - fNew[n][m][3] - fNew[n][m][4] - fNew[n][m][6] - fNew[n][m][8])/2;
                         fNew[n][m][7] = fNew[n][m][5];
@@ -269,32 +269,26 @@ resetFlag = false;
                     fNew[n][m][0] = fOld[n][m][0];
                     fNew[n][m][1] = fOld[n][m-1][1];
                     fNew[n][m][2] = fOld[n+1][m][2];
-                    //fNew[n][m][3] = fOld[n][m-1][3]; // added
                     fNew[n][m][5] = fOld[n+1][m-1][5];
                     fNew[n][m][6] = fOld[n+1][m][6];
                     
                     fNew[n][m][3] = fNew[n][m][1];
                     fNew[n][m][4] = fNew[n][m][2];
-                    //fNew[n][m][4] = fNew[n][m][1]; // tried to replace ^^
                     fNew[n][m][7] = fNew[n][m][5];
                     
-                    //rhoB = (rho[n+1][m]+rho[n][m-1])/2;
                     rhoB = fNew[n][m].reduce((a,b) => a + b, 0);
                     fNew[n][m][6] = (rhoB-fNew[n][m][0] - fNew[n][m][1] - fNew[n][m][2] - fNew[n][m][3] - fNew[n][m][4] - fNew[n][m][5] - fNew[n][m][7])/2;
-                    //fNew[n][m][5] = (rhoB-fNew[n][m][0] - fNew[n][m][1] - fNew[n][m][2] - fNew[n][m][3] - fNew[n][m][4] - fNew[n][m][6] - fNew[n][m][8])/2;
                     fNew[n][m][8] = fNew[n][m][6];
                 }else{ // all other top nodes
                     fNew[n][m][0] = fOld[n][m][0];
                     fNew[n][m][1] = fOld[n][m-1][1];
                     fNew[n][m][2] = fOld[n+1][m][2];
                     fNew[n][m][3] = fOld[n][m+1][3];
-                    //fNew[n][m][4] = fOld[n][m+1][4]; // added
                     fNew[n][m][5] = fOld[n+1][m-1][5];
                     fNew[n][m][6] = fOld[n+1][m+1][6];
                     
                     fNew[n][m][4] = fNew[n][m][2];
 
-                    //rhoB = fNew[n][m][0] + fNew[n][m][1] + fNew[n][m][3] + 2*(fNew[n][m][2] + fNew[n][m][5] + fNew[n][m][6]);
                     rhoB = fNew[n][m].reduce((a,b) => a + b, 0);
                     fNew[n][m][7] = fNew[n][m][5] + (fNew[n][m][1] - fNew[n][m][3])/2 - rhoB*uLid/2;
                     fNew[n][m][8] = fNew[n][m][6] + (fNew[n][m][3] - fNew[n][m][1])/2 + rhoB*uLid/2;
@@ -309,7 +303,7 @@ resetFlag = false;
                     fNew[n][m][1] = fNew[n][m][3];
                     fNew[n][m][2] = fNew[n][m][4];
                     fNew[n][m][5] = fNew[n][m][7];
-                    //rhoB = (rho[n-1][m] + rho[n][m+1])/2;
+                    
                     rhoB = fNew[n][m].reduce((a,b) => a + b, 0);
                     fNew[n][m][6] = (rhoB - fNew[n][m][0] - fNew[n][m][1] - fNew[n][m][2] - fNew[n][m][3] - fNew[n][m][4] - fNew[n][m][5] - fNew[n][m][7])/2;
                     fNew[n][m][8] = fNew[n][m][6];
@@ -323,7 +317,7 @@ resetFlag = false;
                     fNew[n][m][3] = fNew[n][m][1];
                     fNew[n][m][2] = fNew[n][m][4];
                     fNew[n][m][6] = fNew[n][m][8];
-                    //rhoB = (rho[n-1][m] + rho[n][m-1])/2;
+                    
                     rhoB = fNew[n][m].reduce((a,b) => a + b, 0);
                     fNew[n][m][5] = (rhoB - fNew[n][m][0] - fNew[n][m][1] - fNew[n][m][2] - fNew[n][m][3] - fNew[n][m][4] - fNew[n][m][6] - fNew[n][m][8])/2;
                     fNew[n][m][7] =  fNew[n][m][5];
@@ -381,7 +375,7 @@ resetFlag = false;
         for (let m = 0; m < Nx; m++){
             for (let n = 0; n < Ny; n++){
                 let f = fNew[n][m];
-                //console.log(`f: ${f}`);
+                
                 rho[n][m] = f[0] + f[1] + f[2] + f[3] + f[4] + f[5] + f[6] + f[7] + f[8];
                 u[n][m] = (fNew[n][m][1] + fNew[n][m][5] + fNew[n][m][8] - fNew[n][m][3] - fNew[n][m][6] - fNew[n][m][7])/rho[n][m];
                 v[n][m] = (fNew[n][m][2] + fNew[n][m][5] + fNew[n][m][6] - fNew[n][m][4] - fNew[n][m][7] - fNew[n][m][8])/rho[n][m];
@@ -392,7 +386,6 @@ resetFlag = false;
         for (let m = 0; m < Nx; m++){
             for (let n = 0; n < Ny; n++){
                 for(let k = 0; k < 9; k++){
-                    //fEq[n][m][k] = w[k] * rho[n][m] * (1 + dotProduct(Ksi[k], [u[n][m], v[n][m]]) / (cs ** 2) + Math.pow(dotProduct(Ksi[k], [u[n][m], v[n][m]]), 2) / (2 * (cs ** 4)) - (Math.pow(u[n][m], 2) + Math.pow(v[n][m], 2)) / (2 * (cs ** 2)));
                     let uX = u[n][m];
                     let uY = v[n][m];
                     let KsiX = Ksi[k][0];
